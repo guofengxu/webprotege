@@ -120,3 +120,35 @@ To override in development, place a `webprotege.properties` file in `webprotege-
 | Email templates | Mustache |
 | Build | Maven 3.5+ |
 | Deployment | Tomcat 8/8.5, Docker |
+
+## Branch Strategy
+
+- `main`: production-ready, no direct pushes (PR + CI required)
+- `feature/<desc>`: branch from `main`, PR back
+- `hotfix/<desc>`: from `main`, PR back
+- Current active branch: `ArchitectureEnhancement`
+
+## Connect to RAG server
+
+### 1. Connection Parameters
+| Key | Value | Environment Variable Override |
+|----|-----|--------------|
+| Host | `192.168.3.231` | `REMOTE_HOST` |
+| SSH User | `guofengxu` | `REMOTE_USER` |
+| Application Root Directory | `/home/guofengxu/00.workspace/industrialAIAgent` | `REMOTE_DIR` |
+| Authentication Method | SSH Public Key (Recommended) | — |
+### 3. Basic Connection
+#### 3.1 Interactive Login
+​```bash
+ssh guofengxu@192.168.3.231
+​```
+#### 3.2 Non-Interactive Connectivity Check
+​```bash
+ssh guofengxu@192.168.3.231 'hostname && whoami'
+​```
+Expected: Outputs the hostname and `guofengxu`.
+#### 3.3 Enter the Application Directory
+​```bash
+ssh guofengxu@192.168.3.231 'cd /home/guofengxu/00.workspace/industrialAIAgent && pwd'
+​```
+---
