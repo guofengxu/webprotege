@@ -6,6 +6,8 @@ import dagger.multibindings.IntoSet;
 import edu.stanford.bmir.protege.web.server.api.exception.PermissionDeniedExceptionMapper;
 import edu.stanford.bmir.protege.web.server.api.exception.UnknownProjectExceptionMapper;
 import edu.stanford.bmir.protege.web.server.api.resources.ProjectsResource;
+import edu.stanford.bmir.protege.web.server.integration.api.IndividualRuntimeDataResource;
+import edu.stanford.bmir.protege.web.server.integration.dispatch.ActionDispatch;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
@@ -26,7 +28,8 @@ public class ApiModule {
 
     @Provides
     public ResourceConfig provideResourceConfig(ApiKeyManager apiKeyManager,
-                                                Set<ApiRootResource> apiRootResources) {
+                                                Set<ApiRootResource> apiRootResources,
+                                                IndividualRuntimeDataResource individualRuntimeDataResource) {
         ResourceConfig resourceConfig = new ResourceConfig();
 
         // A filter to ensure that either a session token (with an associated user) is
@@ -46,8 +49,14 @@ public class ApiModule {
 
         // Add injected resources
         apiRootResources.forEach(resourceConfig::register);
+        resourceConfig.register(individualRuntimeDataResource);
 
         return resourceConfig;
+    }
+
+    @Provides
+    public ActionDispatch provideActionDispatch(ActionExecutor actionExecutor) {
+        return actionExecutor::execute;
     }
 
     @Provides
