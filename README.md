@@ -95,3 +95,55 @@ Sharing the volumes used by the WebProtégé app and MongoDB allow to keep persi
 * MongoDB will store its data in the source code folder at `./.protegedata/mongodb` where you run `docker-compose`
 
 > Path to the shared volumes can be changed in the `docker-compose.yml` file.
+
+Building and Deploying Your Own Docker Image
+--------------------------------------------
+
+The steps above use the pre-built WebProtégé image from Docker Hub. If you would rather build your own image from the source code (for example, from the latest code on the `master` branch), follow the steps below.
+
+The only thing you need installed on your machine is [Docker](https://docs.docker.com/get-docker/). You do not need Java or Maven — the whole application is compiled inside Docker.
+
+1. Get the source code and go into the project folder
+
+   ```bash
+   git clone https://github.com/protegeproject/webprotege.git
+   cd webprotege
+   ```
+
+2. Build the Docker image
+
+   Run the command below. It builds the image and names it with the `latest-dev` tag, so you can easily tell it apart from the official image on Docker Hub:
+
+   ```bash
+   docker build -t protegeproject/webprotege:latest-dev --build-arg WEBPROTEGE_VERSION=5.0.0-SNAPSHOT .
+   ```
+
+   Be patient — this compiles all of WebProtégé inside Docker and can take 20 minutes or more the first time you run it.
+
+   > The `WEBPROTEGE_VERSION` value must match the `<version>` number near the top of the `pom.xml` file. On the current `master` branch that version is `5.0.0-SNAPSHOT`.
+
+3. Point Docker Compose at your `latest-dev` image
+
+   Create a file named `docker-compose.override.yml` next to `docker-compose.yml`, with this content:
+
+   ```yaml
+   version: "3"
+
+   services:
+     webprotege:
+       image: protegeproject/webprotege:latest-dev
+   ```
+
+   Docker Compose reads this file automatically and will use your locally built image instead of downloading the official one.
+
+4. Start WebProtégé and MongoDB
+
+   ```bash
+   docker-compose up -d
+   ```
+
+5. Finish the setup
+
+   Follow steps 2 and 3 in the [Running from Docker](#running-from-docker) section above to create the admin user and configure the application settings. When you are done, WebProtégé is available at [http://localhost:5000](http://localhost:5000).
+
+If you later change the source code, repeat steps 2 and 4 to rebuild the image and restart the containers with the new version.
