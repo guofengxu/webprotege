@@ -127,6 +127,7 @@ To override in development, place a `webprotege.properties` file in `webprotege-
 - Branch format: `<type>/<optional-ticket>-<kebab-desc>`
   - Types: `feature`, `fix`, `hotfix`, `test`, `refactor`, `docs`, `chore`, `release`
 - Commits / PR titles: Conventional Commits (`feat|fix|docs|...`)
+- GitHub Issue/PR/Review comments: Conventional Comments (`suggestion:` / `issue (blocking):` / ...)
 - Cursor enforcement: `.cursor/rules/git-branch-commit.mdc` + skill `git-naming-conventions`
 
 ## Connect to RAG server

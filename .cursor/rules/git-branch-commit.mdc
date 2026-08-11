@@ -1,11 +1,11 @@
 ---
-description: GitHub 分支命名与提交备注（commit/PR）规范；创建分支、提交、开 PR 时必须遵守
+description: GitHub 分支命名、commit/PR 标题与 GitHub Comment（Issue/PR/Review）提交规范；建分支、提交、开 PR、发评论时必须遵守
 alwaysApply: true
 ---
 
-# Git 分支与提交规范
+# Git 分支、提交与 Comment 规范
 
-创建分支、撰写 commit、开 PR 时遵循本规范。详细流程见 skill `git-naming-conventions`。
+创建分支、撰写 commit、开 PR、在 GitHub 发 Issue/PR/Review 评论时遵循本规范。详细流程见 skill `git-naming-conventions`。
 
 ## 分支命名
 
@@ -69,6 +69,51 @@ Closes #834
 ## PR 标题
 
 与 commit 同格式：`feat(search): add Lucene deprecated-entity index`
+
+## GitHub Comment（Issue / PR / Review）
+
+采用 Conventional Comments：
+
+```
+<label> [optional decorations]: <subject>
+
+[optional body — evidence, why, suggested fix]
+```
+
+| label | 用途 |
+|-------|------|
+| `praise` | 肯定值得保留的写法 |
+| `nitpick` | 琐碎偏好（默认非阻塞） |
+| `suggestion` | 具体改进建议 |
+| `issue` | 缺陷 / 不正确行为（默认阻塞） |
+| `question` | 需作者澄清 |
+| `todo` | 合并前必须完成的小项 |
+| `thought` | 非要求的想法 |
+| `chore` | 流程 / CI / 杂项提醒 |
+| `note` | 中性说明 |
+
+Decorations（可省略）：`(non-blocking)` `(blocking)` `(if-minor)` `(security)` `(perf)`
+
+规则：
+- 一条评论一个关注点；先结论后证据
+- 行内 Review 优先给可落地建议（必要时附代码块）
+- `issue` / `todo` 默认阻塞合并；`nitpick` / `thought` / `praise` 默认非阻塞
+- 禁止：仅 “LGTM”/“+1”、无上下文的 “fix this”、人身攻击或嘲讽
+- 用 `gh` 发评论时正文走 HEREDOC，保持上述格式
+
+```
+✅ suggestion: extract null-check into Optional to match nearby handlers
+
+The surrounding index code already uses Optional; this keeps the NPE path consistent.
+
+✅ issue (blocking): session is not invalidated before cookie clear
+
+See AuthFilter.java logout path — concurrent requests can reuse the session.
+
+❌ LGTM
+❌ fix this
+❌ 这里写得不行
+```
 
 ## 快速决策
 

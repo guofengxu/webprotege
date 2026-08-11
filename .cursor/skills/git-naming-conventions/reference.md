@@ -107,3 +107,50 @@ Historical commits often used free-form English (`Updated JVM options...`). Goin
 | `ci` | GitHub Actions / Maven CI |
 
 Omit scope when the change is cross-cutting or trivial.
+
+## GitHub Comment regex (header)
+
+```
+^(praise|nitpick|suggestion|issue|todo|question|thought|chore|note)( \([a-z0-9-]+\))*: .{3,120}$
+```
+
+- One label from the allowed set
+- Optional decorations in parentheses, e.g. `(blocking)`, `(non-blocking)`, `(security)`
+- Subject after `: ` — at least 3 chars; prefer lowercase start for English
+
+Banned standalone bodies (entire trimmed text, case-insensitive): `lgtm`, `+1`, `fix this`, `same`, `ok`, `okay`
+
+## Comment examples
+
+```
+suggestion: extract null-check into Optional to match nearby handlers
+
+The surrounding index code already uses Optional; this keeps the NPE path consistent.
+```
+
+```
+issue (blocking): session is not invalidated before cookie clear
+
+Auth logout clears the cookie first. Concurrent requests can reuse the session.
+```
+
+```
+nitpick (non-blocking): rename tmp to revisionId for clarity
+```
+
+```
+question: which WebProtégé version reproduces the empty search hit list?
+```
+
+```
+praise: nice isolation of the Lucene query builder — easy to unit test
+```
+
+## Comment anti-patterns
+
+| Bad | Why | Good |
+|-----|-----|------|
+| `LGTM` | No signal | `praise: clean separation of index rebuild and query path` |
+| `fix this` | No label / evidence | `issue (blocking): NPE when shortForm is null` |
+| `这里写得不行` | Vague / unkind | `suggestion: align error handling with AbstractProjectActionHandler` |
+| Multiple unrelated nits in one comment | Hard to resolve | One concern per comment |

@@ -1,22 +1,26 @@
 ---
 name: git-naming-conventions
 description: >-
-  Enforces GitHub branch naming and Conventional Commit / PR title conventions
-  for this repo. Use when creating branches, writing commit messages, opening
-  PRs, renaming non-compliant branches, or when the user asks about 分支命名,
-  提交备注, commit message, or PR title standards.
+  Enforces GitHub branch naming, Conventional Commits / PR titles, and
+  Conventional Comments for Issue/PR/Review. Use when creating branches,
+  writing commit messages, opening PRs, drafting or posting GitHub comments
+  or reviews, or when the user asks about 分支命名, 提交备注, commit message,
+  PR title, GitHub comment, review comment, or 评论规范.
 ---
 
-# Git Naming Conventions
+# Git Naming & Comment Conventions
 
-Standardize branch names, commit messages, and PR titles. Always-on summary lives in `.cursor/rules/git-branch-commit.mdc`. Full examples: [reference.md](reference.md).
+Standardize branch names, commit messages, PR titles, and GitHub comments.
+Always-on summary: `.cursor/rules/git-branch-commit.mdc`.
+Examples: [reference.md](reference.md).
 
 ## When to use
 
 - Create / rename a branch
 - Draft or finalize a commit message
 - Create a PR (title + body)
-- Audit whether current branch/commits comply
+- Draft or post Issue / PR / Review comments (`gh issue comment`, `gh pr comment`, `gh pr review`)
+- Audit whether current branch / commits / comment drafts comply
 
 ## Workflow checklist
 
@@ -27,6 +31,8 @@ Progress:
 - [ ] 3. Create branch from updated base
 - [ ] 4. Draft Conventional Commit message
 - [ ] 5. Validate before commit / push / PR
+- [ ] 6. PR title & body
+- [ ] 7. GitHub comments / reviews (when posting)
 ```
 
 ### 1. Resolve base branch
@@ -116,6 +122,12 @@ Or validate a draft only:
 python3 .cursor/skills/git-naming-conventions/scripts/validate_names.py --branch 'feature/123-add-search' --message 'feat(search): add entity short-form lookup'
 ```
 
+Validate a comment draft:
+
+```bash
+python3 .cursor/skills/git-naming-conventions/scripts/validate_names.py --comment 'suggestion: extract null-check into Optional'
+```
+
 Fix any `FAIL` before proceeding.
 
 ### 6. PR title & body
@@ -133,12 +145,66 @@ Fix any `FAIL` before proceeding.
 Closes #<issue>   # if applicable
 ```
 
+### 7. GitHub comments & reviews
+
+Use **Conventional Comments** for Issue comments, PR conversation comments, and review bodies/line comments:
+
+```
+<label> [optional decorations]: <subject>
+
+[optional body]
+```
+
+| Intent | label | Default |
+|--------|-------|---------|
+| Must fix before merge | `issue` or `todo` | blocking |
+| Concrete improvement | `suggestion` | non-blocking unless `(blocking)` |
+| Style nits | `nitpick` | non-blocking |
+| Need clarification | `question` | wait for answer |
+| Idea only | `thought` | non-blocking |
+| Thanks / good pattern | `praise` | non-blocking |
+| Process / CI note | `chore` / `note` | context-dependent |
+
+**Posting with `gh` (always HEREDOC):**
+
+```bash
+# Issue comment
+gh issue comment <n> --body "$(cat <<'EOF'
+question: can you share the browser version where this reproduces?
+
+Without that we cannot match server logs to the failure window.
+EOF
+)"
+
+# PR conversation comment
+gh pr comment <n> --body "$(cat <<'EOF'
+suggestion: move the Optional unwrap next to the Lucene hit mapping
+
+Keeps null handling consistent with DeprecatedEntitiesIndexLuceneImpl.
+EOF
+)"
+
+# PR review (comment | approve | request-changes)
+gh pr review <n> --request-changes --body "$(cat <<'EOF'
+issue (blocking): logout does not invalidate the server session before clearing the cookie
+
+Concurrent requests can reuse a half-closed session. Please invalidate first, then clear the client cookie.
+EOF
+)"
+```
+
+Review event mapping:
+- any `issue` / `todo` unresolved → prefer `--request-changes`
+- only `suggestion` / `nitpick` / `thought` / `praise` → `--comment` or `--approve`
+- never approve with unresolved blocking comments
+
 ## Hard stops
 
 - Do not commit with subject `update`, `fix`, `WIP`, or empty body-only dumps of filenames.
 - Do not create branches like `ArchitectureEnhancement`, `Feature/Foo`, `my_branch`.
 - Do not push to default branch; open a PR.
 - Do not invent ticket IDs; omit the ticket segment if none exists.
+- Do not post GitHub comments that are only `LGTM`, `+1`, `fix this`, or vague criticism without label + subject + evidence.
 
 ## Additional resources
 
