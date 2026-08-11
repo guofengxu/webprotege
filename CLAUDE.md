@@ -123,10 +123,11 @@ To override in development, place a `webprotege.properties` file in `webprotege-
 
 ## Branch Strategy
 
-- `main`: production-ready, no direct pushes (PR + CI required)
-- `feature/<desc>`: branch from `main`, PR back
-- `hotfix/<desc>`: from `main`, PR back
-- Current active branch: `ArchitectureEnhancement`
+- Default branch (`main`/`master`): production-ready, no direct pushes (PR + CI required)
+- Branch format: `<type>/<optional-ticket>-<kebab-desc>`
+  - Types: `feature`, `fix`, `hotfix`, `test`, `refactor`, `docs`, `chore`, `release`
+- Commits / PR titles: Conventional Commits (`feat|fix|docs|...`)
+- Cursor enforcement: `.cursor/rules/git-branch-commit.mdc` + skill `git-naming-conventions`
 
 ## Connect to RAG server
 
