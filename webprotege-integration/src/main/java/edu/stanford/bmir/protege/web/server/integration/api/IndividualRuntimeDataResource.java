@@ -145,17 +145,39 @@ public class IndividualRuntimeDataResource {
         }
     }
 
+    /**
+     * Resolves the target individual IRI from the query parameter and/or JSON body.
+     *
+     * <p>When both are present they must be equal after trim. Preferring the query value
+     * without this check would let PUT/PATCH apply one individual's property payload to a
+     * different individual named in the body (or vice versa).</p>
+     */
     @Nonnull
     private static String resolveIndividualIri(String queryIri,
                                                IndividualRuntimeDataRequest request) {
-        if (queryIri != null && !queryIri.trim().isEmpty()) {
-            return queryIri.trim();
+        String fromQuery = normalizeIri(queryIri);
+        String fromBody = request == null ? null : normalizeIri(request.getIndividualIri());
+        if (fromQuery != null && fromBody != null && !fromQuery.equals(fromBody)) {
+            throw new IllegalArgumentException(
+                    "Query parameter 'individualIri' must match request body 'individualIri'");
         }
-        if (request != null && request.getIndividualIri() != null && !request.getIndividualIri().trim().isEmpty()) {
-            return request.getIndividualIri().trim();
+        if (fromQuery != null) {
+            return fromQuery;
+        }
+        if (fromBody != null) {
+            return fromBody;
         }
         throw new IllegalArgumentException(
                 "individualIri must be provided as a query parameter or in the request body");
+    }
+
+    /** Returns a trimmed IRI, or {@code null} when missing/blank. */
+    private static String normalizeIri(String iri) {
+        if (iri == null) {
+            return null;
+        }
+        String trimmed = iri.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     @Nonnull

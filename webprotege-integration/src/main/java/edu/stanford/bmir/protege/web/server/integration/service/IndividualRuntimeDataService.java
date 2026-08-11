@@ -56,6 +56,14 @@ public class IndividualRuntimeDataService {
         return toRuntimeData(projectId, individualIri, frame, null);
     }
 
+    /**
+     * Lists runtime data for every named individual under owl:Thing.
+     *
+     * <p>Fetches individuals page-by-page via {@link GetIndividualsAction}, advancing until
+     * {@code pageNumber} reaches {@link edu.stanford.bmir.protege.web.shared.pagination.Page#getPageCount()}.
+     * A single hard-coded page (e.g. size 100) would under-report while REST {@code count}
+     * still looked like the full set.</p>
+     */
     @Nonnull
     public List<IndividualRuntimeData> listRuntimeData(@Nonnull String projectId,
                                                        @Nonnull UserId userId) {
@@ -63,23 +71,32 @@ public class IndividualRuntimeDataService {
         Objects.requireNonNull(userId, "userId");
 
         ProjectId id = ProjectId.get(projectId);
-        GetIndividualsAction listAction = new GetIndividualsAction(
-                id,
-                Optional.of(DataFactory.getOWLThing()),
-                "",
-                InstanceRetrievalMode.ALL_INSTANCES,
-                Optional.of(PageRequest.requestPageWithSize(1, DEFAULT_LIST_PAGE_SIZE))
-        );
-        GetIndividualsResult listResult = actionDispatch.execute(listAction, userId);
-
         List<IndividualRuntimeData> result = new ArrayList<>();
-        for (EntityNode node : listResult.getIndividuals()) {
-            if (!node.getEntity().isOWLNamedIndividual()) {
-                continue;
+        int pageNumber = 1;
+        // Loop until we have walked every page reported by GetIndividualsResult.
+        while (true) {
+            GetIndividualsAction listAction = new GetIndividualsAction(
+                    id,
+                    Optional.of(DataFactory.getOWLThing()),
+                    "",
+                    InstanceRetrievalMode.ALL_INSTANCES,
+                    Optional.of(PageRequest.requestPageWithSize(pageNumber, DEFAULT_LIST_PAGE_SIZE))
+            );
+            GetIndividualsResult listResult = actionDispatch.execute(listAction, userId);
+            for (EntityNode node : listResult.getIndividuals()) {
+                if (!node.getEntity().isOWLNamedIndividual()) {
+                    continue;
+                }
+                String iri = node.getEntity().getIRI().toString();
+                PlainNamedIndividualFrame frame = getPlainFrame(projectId, iri, userId);
+                result.add(toRuntimeData(projectId, iri, frame, null));
             }
-            String iri = node.getEntity().getIRI().toString();
-            PlainNamedIndividualFrame frame = getPlainFrame(projectId, iri, userId);
-            result.add(toRuntimeData(projectId, iri, frame, null));
+            int pageCount = listResult.getPaginatedResult().getPageCount();
+            // Stop when the last page is reached, or the page is empty (defensive).
+            if (pageNumber >= pageCount || listResult.getIndividuals().isEmpty()) {
+                break;
+            }
+            pageNumber++;
         }
         return result;
     }

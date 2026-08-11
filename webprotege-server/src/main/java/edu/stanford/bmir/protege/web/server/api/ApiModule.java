@@ -6,6 +6,7 @@ import dagger.multibindings.IntoSet;
 import edu.stanford.bmir.protege.web.server.api.exception.PermissionDeniedExceptionMapper;
 import edu.stanford.bmir.protege.web.server.api.exception.UnknownProjectExceptionMapper;
 import edu.stanford.bmir.protege.web.server.api.resources.ProjectsResource;
+import edu.stanford.bmir.protege.web.server.integration.IntegrationModule;
 import edu.stanford.bmir.protege.web.server.integration.api.IndividualRuntimeDataResource;
 import edu.stanford.bmir.protege.web.server.integration.dispatch.ActionDispatch;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -18,7 +19,7 @@ import java.util.Set;
  * Stanford Center for Biomedical Informatics Research
  * 13 Apr 2018
  */
-@Module
+@Module(includes = IntegrationModule.class)
 public class ApiModule {
 
     @Provides
