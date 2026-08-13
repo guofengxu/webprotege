@@ -5,9 +5,10 @@ import dagger.Module;
 /**
  * Dagger module for the third-party integration layer ({@code webprotege-integration}).
  *
- * <p>Runtime-data REST types ({@code IndividualRuntimeDataService},
- * {@code IndividualRuntimeDataResource}) use constructor {@code @Inject} and are created
- * by the application graph when {@link edu.stanford.bmir.protege.web.server.api.ApiModule}
+ * <p>Runtime REST types ({@code IndividualRuntimeDataService},
+ * {@code OntologyClassService}, {@code OntologyPropertyService} and their
+ * resources) use constructor {@code @Inject} and are created by the
+ * application graph when {@link edu.stanford.bmir.protege.web.server.api.ApiModule}
  * includes this module. {@code ActionDispatch} stays in {@code ApiModule} because it
  * binds to server-side {@code ActionExecutor}.</p>
  *

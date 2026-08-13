@@ -11,6 +11,7 @@ import edu.stanford.bmir.protege.web.shared.dispatch.actions.GetNamedIndividualF
 import edu.stanford.bmir.protege.web.shared.dispatch.actions.GetNamedIndividualFrameResult;
 import edu.stanford.bmir.protege.web.shared.dispatch.actions.UpdateNamedIndividualFrameAction;
 import edu.stanford.bmir.protege.web.shared.entity.EntityNode;
+import edu.stanford.bmir.protege.web.shared.entity.OWLClassData;
 import edu.stanford.bmir.protege.web.shared.entity.OWLDataPropertyData;
 import edu.stanford.bmir.protege.web.shared.entity.OWLLiteralData;
 import edu.stanford.bmir.protege.web.shared.entity.OWLNamedIndividualData;
@@ -18,6 +19,7 @@ import edu.stanford.bmir.protege.web.shared.event.EventList;
 import edu.stanford.bmir.protege.web.shared.event.EventTag;
 import edu.stanford.bmir.protege.web.shared.event.ProjectEvent;
 import edu.stanford.bmir.protege.web.shared.frame.NamedIndividualFrame;
+import edu.stanford.bmir.protege.web.shared.frame.PlainNamedIndividualFrame;
 import edu.stanford.bmir.protege.web.shared.frame.PropertyLiteralValue;
 import edu.stanford.bmir.protege.web.shared.frame.State;
 import edu.stanford.bmir.protege.web.shared.individuals.GetIndividualsAction;
@@ -74,6 +76,7 @@ public class IndividualRuntimeDataService_TestCase {
         assertThat(data.getProjectId(), is(PROJECT_ID));
         assertThat(data.getIndividualIri(), is(INDIVIDUAL_IRI));
         assertThat(data.getProperties(), hasEntry(STATUS_PROPERTY, "RUNNING"));
+        assertThat(data.getTypes(), hasItem("http://example.org/Sensor"));
     }
 
     @Test
@@ -104,11 +107,88 @@ public class IndividualRuntimeDataService_TestCase {
                 .findFirst()
                 .orElseThrow(AssertionError::new);
         assertThat(updateAction.getTo().getPropertyValues(), hasSize(1));
+        PlainNamedIndividualFrame to = (PlainNamedIndividualFrame) updateAction.getTo();
+        PlainNamedIndividualFrame from = (PlainNamedIndividualFrame) updateAction.getFrom();
+        assertThat(to.getParents(), is(from.getParents()));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldRejectBlankIndividualIri() {
         service.getRuntimeData(PROJECT_ID, "  ", userId);
+    }
+
+    @Test
+    public void shouldPatchRuntimeDataViaMerge() {
+        NamedIndividualFrame frame = frameWithLiteral(STATUS_PROPERTY, "IDLE");
+        when(actionDispatch.execute(any(GetNamedIndividualFrameAction.class), eq(userId)))
+                .thenReturn(new GetNamedIndividualFrameResult(frame));
+        when(actionDispatch.execute(any(UpdateNamedIndividualFrameAction.class), eq(userId)))
+                .thenReturn(new UpdateObjectResult(new EventList<ProjectEvent<?>>(EventTag.get(1), EventTag.get(1))));
+
+        String extraProperty = "http://example.org/hasMode";
+        IndividualRuntimeDataRequest request = new IndividualRuntimeDataRequest(
+                INDIVIDUAL_IRI,
+                Collections.singletonMap(extraProperty, "AUTO")
+        );
+
+        IndividualRuntimeData patched = service.patchRuntimeData(PROJECT_ID, INDIVIDUAL_IRI, request, userId);
+
+        assertThat(patched.getProperties(), hasEntry(STATUS_PROPERTY, "IDLE"));
+        assertThat(patched.getProperties(), hasEntry(extraProperty, "AUTO"));
+        assertThat(patched.getUpdatedBy(), is("api-user"));
+
+        ArgumentCaptor<Object> allCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(actionDispatch, times(2)).execute(
+                (edu.stanford.bmir.protege.web.shared.dispatch.Action) allCaptor.capture(),
+                eq(userId));
+        UpdateNamedIndividualFrameAction updateAction = allCaptor.getAllValues().stream()
+                .filter(UpdateNamedIndividualFrameAction.class::isInstance)
+                .map(UpdateNamedIndividualFrameAction.class::cast)
+                .findFirst()
+                .orElseThrow(AssertionError::new);
+        assertThat(updateAction.getTo().getPropertyValues(), hasSize(2));
+    }
+
+    @Test
+    public void shouldDeleteRuntimeDataWhenAssertedPropertiesExist() {
+        NamedIndividualFrame frame = frameWithLiteral(STATUS_PROPERTY, "RUNNING");
+        when(actionDispatch.execute(any(GetNamedIndividualFrameAction.class), eq(userId)))
+                .thenReturn(new GetNamedIndividualFrameResult(frame));
+        when(actionDispatch.execute(any(UpdateNamedIndividualFrameAction.class), eq(userId)))
+                .thenReturn(new UpdateObjectResult(new EventList<ProjectEvent<?>>(EventTag.get(1), EventTag.get(1))));
+
+        boolean deleted = service.deleteRuntimeData(PROJECT_ID, INDIVIDUAL_IRI, userId);
+
+        assertThat(deleted, is(true));
+        ArgumentCaptor<Object> allCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(actionDispatch, times(2)).execute(
+                (edu.stanford.bmir.protege.web.shared.dispatch.Action) allCaptor.capture(),
+                eq(userId));
+        UpdateNamedIndividualFrameAction updateAction = allCaptor.getAllValues().stream()
+                .filter(UpdateNamedIndividualFrameAction.class::isInstance)
+                .map(UpdateNamedIndividualFrameAction.class::cast)
+                .findFirst()
+                .orElseThrow(AssertionError::new);
+        assertThat(updateAction.getTo().getPropertyValues().isEmpty(), is(true));
+        assertThat(updateAction.getFrom().getPropertyValues(), hasSize(1));
+    }
+
+    @Test
+    public void shouldReturnFalseOnDeleteWhenNoAssertedProperties() {
+        OWLNamedIndividual individual = DataFactory.getOWLNamedIndividual(INDIVIDUAL_IRI);
+        NamedIndividualFrame emptyFrame = NamedIndividualFrame.get(
+                OWLNamedIndividualData.get(individual, ImmutableMap.of()),
+                ImmutableSet.of(),
+                ImmutableSet.of(),
+                ImmutableSet.of()
+        );
+        when(actionDispatch.execute(any(GetNamedIndividualFrameAction.class), eq(userId)))
+                .thenReturn(new GetNamedIndividualFrameResult(emptyFrame));
+
+        boolean deleted = service.deleteRuntimeData(PROJECT_ID, INDIVIDUAL_IRI, userId);
+
+        assertThat(deleted, is(false));
+        verify(actionDispatch, never()).execute(any(UpdateNamedIndividualFrameAction.class), eq(userId));
     }
 
     @Test
@@ -161,7 +241,9 @@ public class IndividualRuntimeDataService_TestCase {
         OWLNamedIndividualData subject = OWLNamedIndividualData.get(individual, ImmutableMap.of());
         return NamedIndividualFrame.get(
                 subject,
-                ImmutableSet.of(),
+                ImmutableSet.of(
+                        OWLClassData.get(DataFactory.getOWLClass("http://example.org/Sensor"), ImmutableMap.of())
+                ),
                 ImmutableSet.of(
                         PropertyLiteralValue.get(
                                 OWLDataPropertyData.get(DataFactory.getOWLDataProperty(propertyIri), ImmutableMap.of()),

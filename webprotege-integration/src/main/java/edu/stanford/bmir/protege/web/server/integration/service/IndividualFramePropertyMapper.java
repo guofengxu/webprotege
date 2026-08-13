@@ -31,14 +31,22 @@ public final class IndividualFramePropertyMapper {
     @Nonnull
     public static Map<String, String> toPropertyMap(@Nonnull PlainNamedIndividualFrame frame) {
         Objects.requireNonNull(frame, "frame");
+        return toPropertyMap(frame.getPropertyValues());
+    }
+
+    /**
+     * Flattens asserted property values to {@code propertyIri → string}. Derived values are skipped.
+     * Duplicate keys keep the last value (same limitation as the individual REST map).
+     */
+    @Nonnull
+    public static Map<String, String> toPropertyMap(@Nonnull Iterable<? extends PlainPropertyValue> propertyValues) {
+        Objects.requireNonNull(propertyValues, "propertyValues");
         Map<String, String> properties = new LinkedHashMap<>();
-        for (PlainPropertyValue propertyValue : frame.getPropertyValues()) {
+        for (PlainPropertyValue propertyValue : propertyValues) {
             if (propertyValue.getState() == State.DERIVED) {
                 continue;
             }
-            String propertyIri = propertyIri(propertyValue);
-            String value = propertyValue.accept(VALUE_TO_STRING);
-            properties.put(propertyIri, value);
+            properties.put(propertyIri(propertyValue), propertyValue.accept(VALUE_TO_STRING));
         }
         return properties;
     }

@@ -17,6 +17,7 @@ import edu.stanford.bmir.protege.web.shared.individuals.InstanceRetrievalMode;
 import edu.stanford.bmir.protege.web.shared.pagination.PageRequest;
 import edu.stanford.bmir.protege.web.shared.project.ProjectId;
 import edu.stanford.bmir.protege.web.shared.user.UserId;
+import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 
 import javax.annotation.Nonnull;
@@ -203,12 +204,17 @@ public class IndividualRuntimeDataService {
                                                        String updatedBy) {
         Map<String, String> properties = IndividualFramePropertyMapper.toPropertyMap(frame);
         long updatedAt = updatedBy == null ? 0L : System.currentTimeMillis();
+        List<String> types = new ArrayList<>();
+        for (OWLClass parent : frame.getParents()) {
+            types.add(parent.getIRI().toString());
+        }
         return new IndividualRuntimeData(
                 projectId,
                 individualIri,
                 Collections.unmodifiableMap(properties),
                 updatedAt,
-                updatedBy
+                updatedBy,
+                types
         );
     }
 

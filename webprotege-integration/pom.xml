@@ -13,7 +13,8 @@
     <name>webprotege-integration</name>
     <description>
         Third-party system integration module providing RESTful APIs for
-        querying and updating ontology individual runtime data from the live project ontology.
+        querying ontology class and property frames and querying/updating
+        named-individual runtime data from the live project ontology.
     </description>
 
     <dependencies>
@@ -83,6 +84,14 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+        </dependency>
+
+        <!-- Provides RuntimeDelegateImpl so Response.status(...).build() works in unit tests -->
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-common</artifactId>
+            <version>2.27</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

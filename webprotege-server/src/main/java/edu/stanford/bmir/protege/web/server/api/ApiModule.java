@@ -8,6 +8,8 @@ import edu.stanford.bmir.protege.web.server.api.exception.UnknownProjectExceptio
 import edu.stanford.bmir.protege.web.server.api.resources.ProjectsResource;
 import edu.stanford.bmir.protege.web.server.integration.IntegrationModule;
 import edu.stanford.bmir.protege.web.server.integration.api.IndividualRuntimeDataResource;
+import edu.stanford.bmir.protege.web.server.integration.api.OntologyClassResource;
+import edu.stanford.bmir.protege.web.server.integration.api.OntologyPropertyResource;
 import edu.stanford.bmir.protege.web.server.integration.dispatch.ActionDispatch;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -30,7 +32,9 @@ public class ApiModule {
     @Provides
     public ResourceConfig provideResourceConfig(ApiKeyManager apiKeyManager,
                                                 Set<ApiRootResource> apiRootResources,
-                                                IndividualRuntimeDataResource individualRuntimeDataResource) {
+                                                IndividualRuntimeDataResource individualRuntimeDataResource,
+                                                OntologyClassResource ontologyClassResource,
+                                                OntologyPropertyResource ontologyPropertyResource) {
         ResourceConfig resourceConfig = new ResourceConfig();
 
         // A filter to ensure that either a session token (with an associated user) is
@@ -51,6 +55,8 @@ public class ApiModule {
         // Add injected resources
         apiRootResources.forEach(resourceConfig::register);
         resourceConfig.register(individualRuntimeDataResource);
+        resourceConfig.register(ontologyClassResource);
+        resourceConfig.register(ontologyPropertyResource);
 
         return resourceConfig;
     }
