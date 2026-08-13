@@ -1,7 +1,7 @@
 {
-  "perspectiveId" : "ad4fdcb0-ed28-5a30-96a8-8b9575fb4282",
+  "perspectiveId" : "5785084a-4fe0-5d06-a35f-4463854e04ce",
   "label" : {
-    "en" : "Comments"
+    "en" : "Changes by Entity"
   },
   "favorite" : false,
   "layout" : {
@@ -12,10 +12,10 @@
         "weight": 0.3,
         "node": {
           "@type" : "LeafNode",
-          "properties" : {
+          "properties": {
             "portlet": {
               "@type": "String",
-              "value": "portlets.CommentedEntities"
+              "value": "portlets.ClassHierarchy"
             }
           }
         }
@@ -24,10 +24,10 @@
         "weight": 0.7,
         "node": {
           "@type" : "LeafNode",
-          "properties" : {
+          "properties": {
             "portlet": {
               "@type": "String",
-              "value": "portlets.Comments"
+              "value": "portlets.ChangesByEntity"
             }
           }
         }
